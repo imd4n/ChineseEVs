@@ -1,0 +1,29 @@
+# Node dependencies
+node_modules/
+client/node_modules/
+server/node_modules/
+
+# Build output
+client/build/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS files
+.DS_Store
+
+# Environment files
+.env
+.env.*
+client/.env*
+server/.env*
+
+# Misc
+coverage/
+*.log
+
+# Ignore pnp files (Yarn)
+.pnp
+.pnp.js 
