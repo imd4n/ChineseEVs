@@ -1,6 +1,11 @@
 CREATE DATABASE chinese_evs;
 
-CREATE TABLE cars(
+CREATE TABLE cars (
     model_id SERIAL PRIMARY KEY,
-    description VARCHAR(255)
+    model_name VARCHAR(255),
+    price INTEGER,
+    year INTEGER,
+    power INTEGER,
+    battery INTEGER,
+    image_url TEXT
 );
