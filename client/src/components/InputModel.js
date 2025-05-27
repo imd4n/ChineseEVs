@@ -24,13 +24,24 @@ const InputModel = () => {
 
     const onSubmitForm = async e => {
         e.preventDefault();
+
+        const parsedPrice = parseInt(price);
+        const parsedYear = parseInt(year);
+        const parsedPower = parseInt(power);
+        const parsedBattery = parseInt(battery);
+
+        if (parsedPrice < 0 || parsedYear < 0 || parsedPower < 0 || parsedBattery < 0) {
+            alert("Price, Year, Power, and Battery cannot be negative.");
+            return;
+        }
+
         try {
             const body = { 
                 model_name, 
-                price: parseInt(price), 
-                year: parseInt(year),
-                power: parseInt(power),
-                battery: parseInt(battery),
+                price: parsedPrice, 
+                year: parsedYear,
+                power: parsedPower,
+                battery: parsedBattery,
                 image_url 
             };
 
@@ -41,9 +52,12 @@ const InputModel = () => {
             });
 
             if (response.ok) {
-                // Optionally close the modal programmatically if using React state for modal control
-                // For now, data-dismiss="modal" on a button inside the modal should work.
-                window.location = "/"; // Refresh to see the new model and close modal context
+                resetFormFields(); // Reset form on successful submission
+                // For Bootstrap modal, we might need to manually trigger close if data-dismiss doesn't work after async op
+                // or rely on window.location reload which will unmount and remount everything.
+                const closeButton = document.querySelector('#addModelModal .close');
+                if(closeButton) closeButton.click();
+                window.location = "/"; 
             } else {
                 let errorMessage = `Error ${response.status}: ${response.statusText}`;
                 try {
@@ -66,8 +80,8 @@ const InputModel = () => {
 
     return (
         <Fragment>
-            {/* Button to trigger the modal */}
-            <div className="text-center mt-5">
+            {/* Button to trigger the modal - positioning classes removed */}
+            <div> 
                 <button 
                     type="button" 
                     className="btn btn-primary btn-lg" 
@@ -124,6 +138,7 @@ const InputModel = () => {
                                                 value={price}
                                                 onChange={e => setPrice(e.target.value)}
                                                 required
+                                                min="0"
                                                 step="any"
                                             />
                                         </div>
@@ -138,6 +153,7 @@ const InputModel = () => {
                                                 value={year}
                                                 onChange={e => setYear(e.target.value)}
                                                 required
+                                                min="0"
                                             />
                                         </div>
                                     </div>
@@ -153,6 +169,7 @@ const InputModel = () => {
                                                 value={power}
                                                 onChange={e => setPower(e.target.value)}
                                                 required
+                                                min="0"
                                             />
                                         </div>
                                     </div>
@@ -166,6 +183,7 @@ const InputModel = () => {
                                                 value={battery}
                                                 onChange={e => setBattery(e.target.value)}
                                                 required
+                                                min="0"
                                             />
                                         </div>
                                     </div>

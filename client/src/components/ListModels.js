@@ -1,10 +1,25 @@
 import React, { Fragment, useEffect, useState, useMemo } from "react";
 import EditModel from "./EditModel";
+import InputModel from "./InputModel";
 
 // Helper function to format price (optional, but good for UI)
 const formatPrice = (price) => {
     if (price === null || price === undefined) return 'N/A';
     return new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(price);
+};
+
+// Helper function to format timestamp
+const formatTimestamp = (timestamp) => {
+    if (!timestamp) return 'N/A';
+    try {
+        return new Date(timestamp).toLocaleString(undefined, { 
+            year: 'numeric', month: 'short', day: 'numeric', 
+            hour: '2-digit', minute: '2-digit' 
+        });
+    } catch (e) {
+        console.error("Error formatting timestamp:", e);
+        return 'Invalid Date';
+    }
 };
 
 const ListModels = () => {
@@ -76,10 +91,10 @@ const ListModels = () => {
     const cardStyle = {
         border: '1px solid #ddd',
         borderRadius: '8px',
-        padding: '15px',
-        margin: '10px',
-        minWidth: '280px',
-        maxWidth: '320px', // Max width for larger screens, grid will handle layout
+        padding: '15px', // Inner padding for the card content
+        margin: '10px', // Spacing around each card (within the column)
+        width: '100%',   // Make the card fill its column's width
+        maxWidth: '600px', // Max width for the card itself (user-adjusted)
         boxShadow: '0 2px 5px rgba(0,0,0,0.1)',
         display: 'flex',
         flexDirection: 'column',
@@ -88,8 +103,8 @@ const ListModels = () => {
 
     const imgStyle = {
         width: '100%',
-        height: '200px', // Fixed height for image container
-        objectFit: 'cover', // Cover to fit, might crop but looks better than stretch
+        aspectRatio: '16 / 9', // Enforce 16:9 aspect ratio
+        objectFit: 'cover', 
         borderRadius: '4px',
         marginBottom: '10px'
     };
@@ -122,10 +137,20 @@ const ListModels = () => {
         marginBottom: '10px'
     };
 
+    const timestampStyle = {
+        fontSize: '0.75rem',
+        color: '#6c757d', // Bootstrap's text-muted color
+        textAlign: 'right',
+        marginTop: '5px'
+    };
+
     return (
         <Fragment>
             <div className="container mt-5">
-                <h2 className="text-center mb-4">Available EV Models</h2>
+                <div className="d-flex justify-content-between align-items-center mb-4">
+                    <h2 className="mb-0">Available EV Models</h2>
+                    <InputModel />
+                </div>
                 
                 <div className="text-center mb-4">
                     <button 
@@ -161,7 +186,7 @@ const ListModels = () => {
                 
                 <div className="row">
                     {sortedModels.map(car => (
-                        <div key={car.model_id} className="col-lg-4 col-md-6 col-sm-12 d-flex align-items-stretch">
+                        <div key={car.model_id} className="col-lg-6 col-md-6 col-sm-12 d-flex align-items-stretch mb-4">
                             <div style={cardStyle}>
                                 <img 
                                     src={car.image_url || 'https://via.placeholder.com/300x200.png?text=No+Image'} 
@@ -197,6 +222,11 @@ const ListModels = () => {
                                         Delete
                                     </button>
                                 </div>
+                                {car.last_edited_at && (
+                                    <div style={timestampStyle}>
+                                        Last edited: {formatTimestamp(car.last_edited_at)}
+                                    </div>
+                                )}
                             </div>
                         </div>
                     ))}

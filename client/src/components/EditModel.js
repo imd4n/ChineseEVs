@@ -22,13 +22,24 @@ const EditModel = ({ cars }) => {
     // Update model function
     const updateModel = async e => {
         e.preventDefault();
+
+        const parsedPrice = parseInt(price);
+        const parsedYear = parseInt(year);
+        const parsedPower = parseInt(power);
+        const parsedBattery = parseInt(battery);
+
+        if (parsedPrice < 0 || parsedYear < 0 || parsedPower < 0 || parsedBattery < 0) {
+            alert("Price, Year, Power, and Battery cannot be negative.");
+            return;
+        }
+
         try {
             const body = { 
                 model_name,
-                price: parseInt(price),
-                year: parseInt(year),
-                power: parseInt(power),
-                battery: parseInt(battery),
+                price: parsedPrice,
+                year: parsedYear,
+                power: parsedPower,
+                battery: parsedBattery,
                 image_url 
             };
             await fetch(`http://localhost:5000/models/${cars.model_id}`, {
@@ -36,9 +47,13 @@ const EditModel = ({ cars }) => {
                 headers: {"Content-Type": "application/json"},
                 body: JSON.stringify(body)
             });
-            window.location = "/"; // Refresh to see changes
+            // Programmatically close the modal on successful update
+            const closeButton = document.querySelector(`#id${cars.model_id} .close`);
+            if(closeButton) closeButton.click(); 
+            window.location = "/"; 
         } catch (err) {
-            console.error(err.message);
+            console.error("Failed to update model:", err.message);
+            alert(`Failed to update model: ${err.message}`); // Provide feedback on error
         }
     };
 
@@ -102,6 +117,7 @@ const EditModel = ({ cars }) => {
                                             value={price || ''} 
                                             onChange={e => setPrice(e.target.value)} 
                                             required 
+                                            min="0"
                                         />
                                     </div>
                                 </div>
@@ -115,6 +131,7 @@ const EditModel = ({ cars }) => {
                                             value={year || ''} 
                                             onChange={e => setYear(e.target.value)} 
                                             required 
+                                            min="0"
                                         />
                                     </div>
                                 </div>
@@ -130,6 +147,7 @@ const EditModel = ({ cars }) => {
                                             value={power || ''} 
                                             onChange={e => setPower(e.target.value)} 
                                             required 
+                                            min="0"
                                         />
                                     </div>
                                 </div>
@@ -143,6 +161,7 @@ const EditModel = ({ cars }) => {
                                             value={battery || ''} 
                                             onChange={e => setBattery(e.target.value)} 
                                             required 
+                                            min="0"
                                         />
                                     </div>
                                 </div>

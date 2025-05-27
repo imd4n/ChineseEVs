@@ -3,14 +3,15 @@ import './App.css';
 
 // components
 
-import InputModel from './components/InputModel';
+// InputModel is now rendered within ListModels
+// import InputModel from './components/InputModel'; 
 import ListModels from './components/ListModels';
 
 function App() {
   return (
     <Fragment>
       <div className='container'>
-        <InputModel />
+        {/* <InputModel /> Removed as it is now part of ListModels header */}
         <ListModels />
       </div>
     </Fragment>
