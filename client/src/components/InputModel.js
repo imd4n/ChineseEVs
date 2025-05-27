@@ -53,27 +53,22 @@ const InputModel = () => {
             });
 
             if (response.ok) {
-                resetFormFields(); // Reset form on successful submission
+                resetFormFields();
                 
                 const modalElement = document.getElementById('addModelModal');
                 if (modalElement && window.bootstrap && window.bootstrap.Modal) {
                     const modalInstance = window.bootstrap.Modal.getOrCreateInstance(modalElement);
                     
                     const onModalHidden = () => {
-                        console.log("[InputModel] Modal 'addModelModal' 'hidden.bs.modal' event fired. Reloading page.");
                         window.location = "/";
                         modalElement.removeEventListener('hidden.bs.modal', onModalHidden);
                     };
 
-                    console.log("[InputModel] Attaching 'hidden.bs.modal' listener to modal 'addModelModal'.");
                     modalElement.addEventListener('hidden.bs.modal', onModalHidden, { once: true });
-
-                    console.log("[InputModel] Calling modalInstance.hide() for modal 'addModelModal'.");
                     modalInstance.hide();
-
                 } else {
-                   console.warn("[InputModel] Bootstrap modal API not available or modal element not found. Falling back to page reload.");
-                   window.location = "/"; // Fallback if modal instance can't be handled
+                    console.warn("[InputModel] Bootstrap modal API not available or modal element not found. Falling back to page reload.");
+                    window.location = "/";
                 }
             } else {
                 let errorMessage = `Error ${response.status}: ${response.statusText}`;

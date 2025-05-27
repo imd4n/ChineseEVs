@@ -13,18 +13,22 @@ const Login = ({ onLoginSuccess }) => {
         setError('');
         setIsSubmitting(true);
 
-        // Get a reference to the close button BEFORE the await, while it definitely exists.
         const closeButton = document.getElementById('loginModalCloseButton');
-        if (!closeButton) {
-            console.warn("[Login.js] Pre-emptive check: loginModalCloseButton NOT FOUND. This is unexpected before await login.");
-        }
+        // Removed console.warn for button not found pre-emptively
 
         try {
-            // The login function from AuthContext now returns true on success or throws an error.
             const loginSuccessful = await login({ login: username, password: password });
 
             if (loginSuccessful) {
-                console.log("[Login.js] AuthContext.login reported success.");
+                // Removed console.log for AuthContext success
+                if (closeButton) {
+                    // Removed console.log for clicking button
+                    closeButton.click(); 
+                    await new Promise(resolve => setTimeout(resolve, 50));
+                    // Removed console.log for continuing after delay
+                } else {
+                    // Removed console.warn for button being null
+                }
                 // Call the callback instead of trying to click the button
                 if (onLoginSuccess) {
                     onLoginSuccess();

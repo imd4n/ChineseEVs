@@ -23,7 +23,6 @@ const EditModel = ({ cars }) => {
     const updateModel = async e => {
         e.preventDefault();
         e.stopPropagation(); // Stop event propagation
-        console.log("[EditModel] updateModel called");
 
         const parsedPrice = parseInt(price);
         const parsedYear = parseInt(year);
@@ -32,10 +31,8 @@ const EditModel = ({ cars }) => {
 
         if (parsedPrice < 0 || parsedYear < 0 || parsedPower < 0 || parsedBattery < 0) {
             alert("Price, Year, Power, and Battery cannot be negative.");
-            console.log("[EditModel] Validation failed: Negative values submitted.");
             return;
         }
-        console.log("[EditModel] Validation passed.");
 
         try {
             const body = { 
@@ -46,14 +43,12 @@ const EditModel = ({ cars }) => {
                 battery: parsedBattery,
                 image_url 
             };
-            console.log("[EditModel] Attempting fetch to update model with body:", JSON.stringify(body));
             const response = await fetch(`http://localhost:5000/models/${cars.model_id}`, {
                 method: "PUT",
                 headers: {"Content-Type": "application/json"},
                 body: JSON.stringify(body),
                 credentials: "include"
             });
-            console.log(`[EditModel] Fetch response status: ${response.status} ${response.statusText}`);
 
             if (!response.ok) {
                 let errorData = `Server error: ${response.status} ${response.statusText}`;
@@ -61,64 +56,42 @@ const EditModel = ({ cars }) => {
                     const resJson = await response.json();
                     errorData = resJson.message || resJson.error || JSON.stringify(resJson);
                 } catch (jsonError) {
-                    // If response is not JSON, try to read as text
                     try {
                         const textError = await response.text();
                         if (textError) errorData = textError;
                     } catch (textErr) {
-                        // Keep the original status text if reading text also fails
-                        console.error("[EditModel] Error reading text from error response:", textErr);
+                        // Keep the original status text
                     }
                 }
-                console.error("[EditModel] Update failed server-side or network error:", errorData);
+                console.error("Update failed:", errorData);
                 alert(`Failed to update model: ${errorData}`);
-                return; // Stop here if update failed
+                return;
             }
 
-            console.log("[EditModel] Update successful via fetch, preparing to hide modal.");
             const modalElement = document.getElementById(`id${cars.model_id}`);
             
             if (modalElement && window.bootstrap && window.bootstrap.Modal) {
                 const modalInstance = window.bootstrap.Modal.getOrCreateInstance(modalElement);
                 
-                // Define the handler function separately to be able to remove it
                 const onModalHidden = () => {
-                    console.log(`[EditModel] Modal id${cars.model_id} 'hidden.bs.modal' event fired. Reloading page.`);
                     window.location = "/";
-                    // Clean up this specific listener after execution
                     modalElement.removeEventListener('hidden.bs.modal', onModalHidden);
                 };
 
-                // Remove any pre-existing listeners for this event on this element to avoid duplicates
-                // This is a bit broad if we don't have a reference to the exact previous onModalHidden, 
-                // but for a single purpose listener like this, it's generally safe.
-                // A more targeted removal would require storing the handler reference.
-                // For now, let's assume we only add it once before hide.
-                // However, if updateModel could be called multiple times while modal is open, this is important.
-                // Let's refine this to ensure we clear *our* listener if it was somehow set before.
-                // To do this robustly, we'd need to store 'onModalHidden' in a way that persists if the function is re-entered.
-                // For simplicity in this step, we'll rely on {once: true} and assume it's effective.
-                // The main change is attaching listener *before* hide.
-
-                console.log(`[EditModel] Attaching 'hidden.bs.modal' listener to modal id${cars.model_id}.`);
                 modalElement.addEventListener('hidden.bs.modal', onModalHidden, { once: true });
-
-                console.log(`[EditModel] Calling modalInstance.hide() for modal id${cars.model_id}.`);
                 modalInstance.hide();
-
             } else {
-                console.warn(`[EditModel] Bootstrap modal API not available or modal element id${cars.model_id} not found. Falling back to page reload for update.`);
-                window.location = "/"; // Fallback
+                console.warn(`Bootstrap modal API not available or modal element id${cars.model_id} not found. Falling back to page reload for update.`);
+                window.location = "/";
             }
         } catch (err) {
-            console.error("[EditModel] Error in updateModel's main try-catch block:", err.message, err.stack);
+            console.error("Error in updateModel:", err.message, err.stack);
             alert(`An unexpected error occurred while updating the model: ${err.message}`);
         }
     };
 
     // Effect to update state if the `cars` prop changes
     useEffect(() => {
-        console.log("[EditModel] useEffect triggered: cars.model_id changed. Resetting form.", cars);
         resetForm();
     }, [cars.model_id]); // Depend on cars.model_id
 
