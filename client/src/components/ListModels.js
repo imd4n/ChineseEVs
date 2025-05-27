@@ -1,6 +1,8 @@
-import React, { Fragment, useEffect, useState, useMemo } from "react";
+import React, { Fragment, useEffect, useState, useMemo, useRef } from "react";
 import EditModel from "./EditModel";
 import InputModel from "./InputModel";
+import Login from "./Login";
+import { useAuth } from "../context/AuthContext";
 
 // Helper function to format price (optional, but good for UI)
 const formatPrice = (price) => {
@@ -23,17 +25,49 @@ const formatTimestamp = (timestamp) => {
 };
 
 const ListModels = () => {
+    const { isAuthenticated, currentUser, logout, loading } = useAuth();
     const [models, setModels] = useState([]);
     const [sortConfig, setSortConfig] = useState({ key: null, direction: 'ascending' });
+    const [showLoginModal, setShowLoginModal] = useState(false);
+    const loginModalRef = useRef(null);
+    const bsLoginModal = useRef(null);
+
+    useEffect(() => {
+        if (loginModalRef.current) {
+            if (!bsLoginModal.current) {
+                bsLoginModal.current = new window.bootstrap.Modal(loginModalRef.current);
+            }
+
+            if (showLoginModal) {
+                bsLoginModal.current.show();
+            } else {
+                bsLoginModal.current.hide();
+            }
+        }
+        return () => {
+            if (bsLoginModal.current && bsLoginModal.current._isShown) {
+                
+            }
+        };
+    }, [showLoginModal]);
+
+    const handleLoginModalOpen = () => setShowLoginModal(true);
+    
+    const handleLoginSuccess = () => {
+        console.log("[ListModels] handleLoginSuccess called. Setting showLoginModal to false.");
+        setShowLoginModal(false);
+    };
 
     const deleteModel = async (id) => {
         try {
             await fetch(`http://localhost:5000/models/${id}`, {
-                method: "DELETE"
+                method: "DELETE",
+                credentials: "include"
             });
             setModels(models.filter(cars => cars.model_id !== id));
         } catch (err) {
             console.error(err.message);
+            alert(`Failed to delete model: ${err.message}`);
         }
     };
 
@@ -72,17 +106,14 @@ const ListModels = () => {
         if (sortConfig.key === key && sortConfig.direction === 'ascending') {
             direction = 'descending';
         } else if (sortConfig.key === key && sortConfig.direction === 'descending') {
-            // Optional: third click resets sort for this key
-            // setSortConfig({ key: null, direction: 'ascending' });
-            // return;
-            direction = 'ascending'; // Or cycle back to ascending
+            direction = 'ascending';
         }
         setSortConfig({ key, direction });
     };
 
     const getSortIndicator = (key) => {
         if (sortConfig.key === key) {
-            return sortConfig.direction === 'ascending' ? ' ↑' : ' ↓'; // Up and Down arrows
+            return sortConfig.direction === 'ascending' ? ' ↑' : ' ↓';
         }
         return '';
     };
@@ -144,12 +175,32 @@ const ListModels = () => {
         marginTop: '5px'
     };
 
+    if (loading) {
+        return <div className="container mt-5 text-center"><p>Loading application...</p></div>;
+    }
+
     return (
         <Fragment>
             <div className="container mt-5">
-                <div className="d-flex justify-content-between align-items-center mb-4">
+                <div className="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
                     <h2 className="mb-0">Available EV Models</h2>
-                    <InputModel />
+                    <div className="d-flex align-items-center">
+                        {isAuthenticated && currentUser ? (
+                            <Fragment>
+                                <span className="me-3">Welcome, {currentUser.login}!</span>
+                                <InputModel />
+                                <button onClick={logout} className="btn btn-outline-secondary ms-2">Logout</button>
+                            </Fragment>
+                        ) : (
+                            <button 
+                                type="button" 
+                                className="btn btn-primary btn-lg" 
+                                onClick={handleLoginModalOpen}
+                            >
+                                Admin Login
+                            </button>
+                        )}
+                    </div>
                 </div>
                 
                 <div className="text-center mb-4">
@@ -214,13 +265,17 @@ const ListModels = () => {
                                     </div>
                                 </div>
                                 <div style={cardFooterStyle}>
-                                    <EditModel cars={car} /> 
-                                    <button 
-                                        className="btn btn-danger btn-sm" 
-                                        onClick={() => deleteModel(car.model_id)}
-                                    >
-                                        Delete
-                                    </button>
+                                    {isAuthenticated && <EditModel cars={car} />}
+                                    {isAuthenticated ? (
+                                        <button 
+                                            className="btn btn-danger btn-sm" 
+                                            onClick={() => deleteModel(car.model_id)}
+                                        >
+                                            Delete
+                                        </button>
+                                    ) : (
+                                        <div style={{ minWidth: '70px'}} />
+                                    )}
                                 </div>
                                 {car.last_edited_at && (
                                     <div style={timestampStyle}>
@@ -230,6 +285,33 @@ const ListModels = () => {
                             </div>
                         </div>
                     ))}
+                </div>
+            </div>
+
+            <div 
+                className={`modal fade ${showLoginModal ? '' : ''}`}
+                id="loginModal" 
+                ref={loginModalRef}
+                tabIndex="-1" 
+                aria-labelledby="loginModalLabel" 
+                aria-hidden={!showLoginModal}
+            >
+                <div className="modal-dialog modal-dialog-centered">
+                    <div className="modal-content">
+                        <div className="modal-header">
+                            <h5 className="modal-title" id="loginModalLabel">Admin Login</h5>
+                            <button 
+                                type="button" 
+                                id="loginModalCloseButton"
+                                className="btn-close" 
+                                onClick={() => setShowLoginModal(false)}
+                                aria-label="Close">
+                            </button>
+                        </div>
+                        <div className="modal-body">
+                            <Login onLoginSuccess={handleLoginSuccess} />
+                        </div>
+                    </div>
                 </div>
             </div>
         </Fragment>

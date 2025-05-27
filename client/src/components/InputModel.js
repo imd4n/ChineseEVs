@@ -48,16 +48,33 @@ const InputModel = () => {
             const response = await fetch("http://localhost:5000/models", {
                 method: "POST",
                 headers: { "Content-Type": "application/json"},
-                body: JSON.stringify(body)
+                body: JSON.stringify(body),
+                credentials: "include"
             });
 
             if (response.ok) {
                 resetFormFields(); // Reset form on successful submission
-                // For Bootstrap modal, we might need to manually trigger close if data-dismiss doesn't work after async op
-                // or rely on window.location reload which will unmount and remount everything.
-                const closeButton = document.querySelector('#addModelModal .close');
-                if(closeButton) closeButton.click();
-                window.location = "/"; 
+                
+                const modalElement = document.getElementById('addModelModal');
+                if (modalElement && window.bootstrap && window.bootstrap.Modal) {
+                    const modalInstance = window.bootstrap.Modal.getOrCreateInstance(modalElement);
+                    
+                    const onModalHidden = () => {
+                        console.log("[InputModel] Modal 'addModelModal' 'hidden.bs.modal' event fired. Reloading page.");
+                        window.location = "/";
+                        modalElement.removeEventListener('hidden.bs.modal', onModalHidden);
+                    };
+
+                    console.log("[InputModel] Attaching 'hidden.bs.modal' listener to modal 'addModelModal'.");
+                    modalElement.addEventListener('hidden.bs.modal', onModalHidden, { once: true });
+
+                    console.log("[InputModel] Calling modalInstance.hide() for modal 'addModelModal'.");
+                    modalInstance.hide();
+
+                } else {
+                   console.warn("[InputModel] Bootstrap modal API not available or modal element not found. Falling back to page reload.");
+                   window.location = "/"; // Fallback if modal instance can't be handled
+                }
             } else {
                 let errorMessage = `Error ${response.status}: ${response.statusText}`;
                 try {
@@ -85,8 +102,8 @@ const InputModel = () => {
                 <button 
                     type="button" 
                     className="btn btn-primary btn-lg" 
-                    data-toggle="modal" 
-                    data-target="#addModelModal"
+                    data-bs-toggle="modal" 
+                    data-bs-target="#addModelModal"
                 >
                     Add New EV Model
                 </button>
@@ -98,9 +115,7 @@ const InputModel = () => {
                     <div className="modal-content">
                         <div className="modal-header">
                             <h5 className="modal-title" id="addModelModalLabel">Add New EV Model</h5>
-                            <button type="button" className="close" data-dismiss="modal" aria-label="Close" onClick={resetFormFields}>
-                                <span aria-hidden="true">&times;</span>
-                            </button>
+                            <button type="button" className="btn-close" data-bs-dismiss="modal" aria-label="Close" onClick={resetFormFields}></button>
                         </div>
                         <div className="modal-body">
                             {/* The form from your original InputModel */}
@@ -189,7 +204,7 @@ const InputModel = () => {
                                     </div>
                                 </div>
                                 <div className="modal-footer mt-3">
-                                    <button type="button" className="btn btn-secondary" data-dismiss="modal" onClick={resetFormFields}>Close</button>
+                                    <button type="button" className="btn btn-secondary" data-bs-dismiss="modal" onClick={resetFormFields}>Close</button>
                                     <button type="submit" className="btn btn-primary">Add Model</button> 
                                     {/* On successful submit, window.location reload will close modal context */}
                                 </div>
